@@ -1,0 +1,501 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Rajdhani:wght@400;600;700&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0a0a0f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: 'Rajdhani', 'Oswald', sans-serif;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+canvas#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ============================================================
+   HUD
+============================================================ */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 20px;
+  pointer-events: none;
+  z-index: 10;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.0) 100%
+  );
+}
+
+.hud-left,
+.hud-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-right {
+  align-items: flex-end;
+  pointer-events: all;
+}
+
+#score {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(22px, 4vw, 38px);
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow:
+    0 0 8px rgba(255, 220, 80, 0.9),
+    0 0 20px rgba(255, 180, 40, 0.5),
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+}
+
+#coins {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(14px, 2.2vw, 22px);
+  font-weight: 600;
+  color: #ffd54a;
+  text-shadow:
+    0 0 6px rgba(255, 213, 74, 0.8),
+    1px 1px 3px rgba(0, 0, 0, 0.7);
+  letter-spacing: 1.5px;
+}
+
+#best {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(13px, 2vw, 20px);
+  font-weight: 600;
+  color: #b0c8e8;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+  letter-spacing: 1px;
+}
+
+/* ミュートボタン */
+.mute-btn {
+  margin-top: 6px;
+  padding: 6px 14px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(11px, 1.6vw, 15px);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #cce0ff;
+  background: rgba(20, 40, 80, 0.65);
+  border: 1.5px solid rgba(100, 160, 255, 0.45);
+  border-radius: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.mute-btn:hover {
+  background: rgba(40, 80, 160, 0.75);
+  border-color: rgba(140, 200, 255, 0.7);
+  color: #ffffff;
+  box-shadow:
+    0 0 12px rgba(80, 160, 255, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.mute-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   オーバーレイ共通
+============================================================ */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  z-index: 20;
+
+  /* 多層グラデーション背景で重厚感 */
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(60, 100, 180, 0.18) 0%, transparent 65%),
+    radial-gradient(ellipse at 50% 80%, rgba(180, 60, 20, 0.12) 0%, transparent 60%),
+    linear-gradient(160deg, rgba(8, 14, 28, 0.92) 0%, rgba(18, 24, 40, 0.96) 100%);
+
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+/* オーバーレイ内の装飾ライン */
+.overlay::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 200, 60, 0.7) 30%,
+    rgba(255, 120, 40, 0.9) 50%,
+    rgba(255, 200, 60, 0.7) 70%,
+    transparent 100%
+  );
+}
+
+.overlay::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(80, 160, 255, 0.5) 30%,
+    rgba(120, 200, 255, 0.8) 50%,
+    rgba(80, 160, 255, 0.5) 70%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   オーバーレイ内コンテンツ
+============================================================ */
+.overlay h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(36px, 8vw, 86px);
+  font-weight: 700;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow:
+    0 0 12px rgba(255, 200, 60, 0.8),
+    0 0 32px rgba(255, 140, 30, 0.5),
+    0 0 60px rgba(255, 80, 20, 0.25),
+    3px 4px 8px rgba(0, 0, 0, 0.9);
+  position: relative;
+}
+
+/* タイトル下の細いアンダーライン */
+.overlay h1::after {
+  content: '';
+  display: block;
+  margin: 8px auto 0;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 200, 60, 0.8),
+    transparent
+  );
+}
+
+.overlay p {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(13px, 2.2vw, 20px);
+  font-weight: 400;
+  color: rgba(200, 220, 255, 0.85);
+  text-align: center;
+  line-height: 1.7;
+  letter-spacing: 0.8px;
+  max-width: 520px;
+  padding: 0 24px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+#final-score {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(28px, 5.5vw, 58px);
+  font-weight: 700;
+  color: #ffd54a;
+  letter-spacing: 3px;
+  text-shadow:
+    0 0 10px rgba(255, 213, 74, 0.9),
+    0 0 28px rgba(255, 160, 30, 0.5),
+    2px 3px 6px rgba(0, 0, 0, 0.8);
+}
+
+#new-best {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(16px, 3vw, 28px);
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: #ff9a3c;
+  text-shadow:
+    0 0 8px rgba(255, 154, 60, 0.9),
+    0 0 20px rgba(255, 100, 20, 0.5);
+  animation: pulse-best 1.0s ease-in-out infinite alternate;
+}
+
+#new-best.hidden {
+  display: none;
+}
+
+@keyframes pulse-best {
+  from { opacity: 0.75; text-shadow: 0 0 8px rgba(255,154,60,0.7), 0 0 20px rgba(255,100,20,0.3); }
+  to   { opacity: 1.00; text-shadow: 0 0 14px rgba(255,154,60,1.0), 0 0 36px rgba(255,100,20,0.7); }
+}
+
+/* ============================================================
+   ボタン共通
+============================================================ */
+button#start-btn,
+button#restart-btn {
+  margin-top: 8px;
+  padding: 14px 52px;
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(16px, 2.8vw, 26px);
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fff8e8;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+
+  /* 金属的なグラデーション */
+  background: linear-gradient(
+    160deg,
+    #c8860a 0%,
+    #e8a020 20%,
+    #f5c040 45%,
+    #e8a020 70%,
+    #a86808 100%
+  );
+
+  /* 立体感のある影 */
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.4) inset,
+    0 6px 0 #7a4c04,
+    0 8px 16px rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(255, 160, 30, 0.35);
+
+  transition: transform 0.1s, box-shadow 0.1s, filter 0.15s;
+  text-shadow: 0 1px 3px rgba(80, 40, 0, 0.7);
+}
+
+/* ボタン表面の光沢レイヤー */
+button#start-btn::before,
+button#restart-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.22),
+    rgba(255, 255, 255, 0.04)
+  );
+  pointer-events: none;
+}
+
+button#start-btn:hover,
+button#restart-btn:hover {
+  filter: brightness(1.12);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.4) inset,
+    0 6px 0 #7a4c04,
+    0 10px 20px rgba(0, 0, 0, 0.6),
+    0 0 36px rgba(255, 180, 40, 0.55);
+}
+
+button#start-btn:active,
+button#restart-btn:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.3) inset,
+    0 2px 0 #7a4c04,
+    0 4px 8px rgba(0, 0, 0, 0.5),
+    0 0 16px rgba(255, 160, 30, 0.3);
+}
+
+/* ============================================================
+   レスポンシブ調整
+============================================================ */
+@media (max-width: 480px) {
+  #hud {
+    padding: 10px 14px;
+  }
+
+  button#start-btn,
+  button#restart-btn {
+    padding: 12px 38px;
+    letter-spacing: 2px;
+  }
+
+  .overlay h1 {
+    letter-spacing: 3px;
+  }
+}
+
+#character-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  min-height: 100dvh;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  color: #f0e6d3;
+  font-family: 'Georgia', serif;
+  position: relative;
+  z-index: 30;
+  transition: opacity 0.2s;
+}
+
+#character-select h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(20px, 4vw, 36px);
+  letter-spacing: 0.1em;
+  margin-bottom: 2rem;
+  color: #ffffff;
+  text-shadow:
+    0 0 12px rgba(255, 200, 60, 0.8),
+    2px 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.char-list {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.char-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 1rem 0.8rem;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  width: 100px;
+}
+
+.char-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.char-card.selected {
+  border-color: #e2b96f;
+  box-shadow: 0 0 16px rgba(226, 185, 111, 0.5);
+  background: rgba(226, 185, 111, 0.12);
+}
+
+.char-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f0e6d3;
+  margin-top: 0.4rem;
+}
+
+.char-desc {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  color: #a89880;
+  margin-top: 0.2rem;
+  text-align: center;
+}
+
+#char-start-btn {
+  margin-top: 0.5rem;
+  padding: 14px 52px;
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(16px, 2.8vw, 26px);
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #fff8e8;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    160deg,
+    #c8860a 0%,
+    #e8a020 20%,
+    #f5c040 45%,
+    #e8a020 70%,
+    #a86808 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.4) inset,
+    0 6px 0 #7a4c04,
+    0 8px 16px rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(255, 160, 30, 0.35);
+  transition: transform 0.1s, box-shadow 0.1s, filter 0.15s;
+  text-shadow: 0 1px 3px rgba(80, 40, 0, 0.7);
+}
+
+#char-start-btn:hover {
+  filter: brightness(1.12);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.4) inset,
+    0 6px 0 #7a4c04,
+    0 10px 20px rgba(0, 0, 0, 0.6),
+    0 0 36px rgba(255, 180, 40, 0.55);
+}
+
+#char-start-btn:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.3) inset,
+    0 2px 0 #7a4c04,
+    0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 480px) {
+  .char-card {
+    width: 80px;
+    padding: 0.7rem 0.5rem;
+  }
+
+  #char-start-btn {
+    padding: 12px 38px;
+    letter-spacing: 2px;
+  }
+}

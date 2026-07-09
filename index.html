@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ENDLESS RUN</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="game-container">
+  <div id="character-select">
+    <h2>キャラクターを選んでください</h2>
+    <div class="char-list">
+
+      <div class="char-card selected" data-id="0">
+        <div class="char-name">ケンジ</div>
+        <div class="char-desc">男性・登山家</div>
+      </div>
+
+      <div class="char-card" data-id="1">
+        <div class="char-name">アヤカ</div>
+        <div class="char-desc">女性・バレリーナ</div>
+      </div>
+
+      <div class="char-card" data-id="2">
+        <div class="char-name">タロウ</div>
+        <div class="char-desc">男性・サムライ</div>
+      </div>
+
+      <div class="char-card" data-id="3">
+        <div class="char-name">ミク</div>
+        <div class="char-desc">女性・カウガール</div>
+      </div>
+
+      <div class="char-card" data-id="4">
+        <div class="char-name">リョウ</div>
+        <div class="char-desc">男性・騎士</div>
+      </div>
+
+    </div>
+    <button id="char-start-btn">ゲームスタート</button>
+  </div>
+    <canvas id="game"></canvas>
+
+    <div id="hud">
+      <div class="hud-left">
+        <div id="score">0 m</div>
+        <div id="coins">COINS 0</div>
+      </div>
+      <div class="hud-right">
+        <div id="best">BEST 0 m</div>
+        <button id="mute-btn" class="mute-btn">SOUND ON</button>
+      </div>
+    </div>
+
+   <div id="start-screen" class="overlay hidden">
+      <h1>ENDLESS RUN</h1>
+      <p>タップ / スペースキーでジャンプ、下矢印/スワイプでダック<br>障害物を避けてコインを集め、できるだけ遠くまで走ろう</p>
+      <button id="start-btn">START</button>
+    </div>
+
+    <div id="gameover-screen" class="overlay hidden">
+      <h1>GAME OVER</h1>
+      <p id="final-score">0 m</p>
+      <p id="new-best" class="hidden">NEW BEST!</p>
+      <button id="restart-btn">RETRY</button>
+    </div>
+  </div>
+
+<script src="game.js"></script>
+</body>
+</html>
