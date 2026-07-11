@@ -4,6 +4,15 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 body {
@@ -21,6 +30,7 @@ body {
   width: 100vw;
   height: 100dvh;
   overflow: hidden;
+  touch-action: none;
 }
 
 canvas#game {
@@ -40,7 +50,7 @@ canvas#game {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 14px 20px;
+  padding: calc(14px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 14px calc(20px + env(safe-area-inset-left));
   pointer-events: none;
   z-index: 10;
   background: linear-gradient(
@@ -497,5 +507,71 @@ button#restart-btn:active {
   #char-start-btn {
     padding: 12px 38px;
     letter-spacing: 2px;
+  }
+}
+
+/* ============================================================
+   スマホ向けタッチコントロール（ジャンプ / しゃがむ）
+   マウス操作のデスクトップでは表示しない
+============================================================ */
+#touch-controls {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  #touch-controls {
+    display: flex;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 18px calc(18px + env(safe-area-inset-bottom));
+    gap: 16px;
+    pointer-events: none;
+    z-index: 15;
+  }
+
+  #touch-controls.hidden {
+    display: none;
+  }
+
+  .touch-btn {
+    pointer-events: auto;
+    touch-action: none;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    background: rgba(20, 24, 40, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 4px 14px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: background 0.1s, transform 0.1s, border-color 0.1s;
+  }
+
+  .touch-btn-jump {
+    width: 96px;
+    height: 96px;
+    border-color: rgba(255, 200, 60, 0.55);
+    color: #ffe9b8;
+  }
+
+  .touch-btn:active,
+  .touch-btn.pressed {
+    transform: scale(0.9);
+    background: rgba(255, 180, 40, 0.35);
+    border-color: rgba(255, 200, 60, 0.9);
   }
 }

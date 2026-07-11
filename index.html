@@ -2,7 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ENDLESS RUN</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -64,6 +68,15 @@
       <p id="final-score">0 m</p>
       <p id="new-best" class="hidden">NEW BEST!</p>
       <button id="restart-btn">RETRY</button>
+    </div>
+
+    <div id="touch-controls" class="hidden">
+      <button id="btn-duck" class="touch-btn touch-btn-duck" aria-label="しゃがむ">
+        <span>DUCK</span>
+      </button>
+      <button id="btn-jump" class="touch-btn touch-btn-jump" aria-label="ジャンプ">
+        <span>JUMP</span>
+      </button>
     </div>
   </div>
 

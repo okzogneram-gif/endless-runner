@@ -12,6 +12,9 @@
   const startBtn = document.getElementById('start-btn');
   const restartBtn = document.getElementById('restart-btn');
   const muteBtn = document.getElementById('mute-btn');
+  const touchControls = document.getElementById('touch-controls');
+  const btnJump = document.getElementById('btn-jump');
+  const btnDuck = document.getElementById('btn-duck');
 
   const STORAGE_KEY = 'endless-run-best';
   const MUTE_KEY = 'endless-run-muted';
@@ -693,6 +696,7 @@
     gameoverScreen.classList.remove('hidden');
     shake = 14;
     playGameOverSting();
+    if (touchControls) touchControls.classList.add('hidden');
   }
 
   function getBest() { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10); }
@@ -2647,6 +2651,7 @@
     startScreen.style.display = 'none';
     gameoverScreen.classList.add('hidden');
     bestEl.textContent = `BEST ${getBest()} m`;
+    if (touchControls) touchControls.classList.remove('hidden');
     stopGameOverMusic();
     if (!muted) {
       bgmPlayer.start();
@@ -2680,6 +2685,33 @@
     if (state === State.OVER) return;
     jump();
   });
+
+  // Dedicated on-screen jump/duck buttons for touch devices (shown via the
+  // pointer:coarse media query in CSS). Pointer events unify touch and mouse
+  // and, combined with touch-action:none on the buttons, avoid the ~300ms
+  // click delay and any double-firing with the canvas's own tap-to-jump.
+  if (btnJump) {
+    btnJump.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      btnJump.classList.add('pressed');
+      if (state === State.START) { startGame(); return; }
+      jump();
+    });
+    btnJump.addEventListener('pointerup', () => btnJump.classList.remove('pressed'));
+    btnJump.addEventListener('pointercancel', () => btnJump.classList.remove('pressed'));
+    btnJump.addEventListener('pointerleave', () => btnJump.classList.remove('pressed'));
+  }
+  if (btnDuck) {
+    btnDuck.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      btnDuck.classList.add('pressed');
+      setDuck(true);
+    });
+    const releaseDuck = () => { btnDuck.classList.remove('pressed'); setDuck(false); };
+    btnDuck.addEventListener('pointerup', releaseDuck);
+    btnDuck.addEventListener('pointercancel', releaseDuck);
+    btnDuck.addEventListener('pointerleave', releaseDuck);
+  }
 
   bestEl.textContent = `BEST ${getBest()} m`;
   resetGame();
