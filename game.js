@@ -12,6 +12,7 @@
   const startBtn = document.getElementById('start-btn');
   const restartBtn = document.getElementById('restart-btn');
   const muteBtn = document.getElementById('mute-btn');
+  const hudRightEl = document.querySelector('.hud-right');
   const touchControls = document.getElementById('touch-controls');
   const btnJump = document.getElementById('btn-jump');
   const btnDuck = document.getElementById('btn-duck');
@@ -2575,6 +2576,17 @@
     ctx.globalAlpha = 1;
   }
 
+  // Status labels are canvas-drawn but must clear the DOM HUD (BEST score +
+  // sound button) pinned to the same top-right corner, so anchor them to its
+  // actual measured bottom edge instead of a guessed pixel offset.
+  function statusHudTop() {
+    if (hudRightEl) {
+      const rect = hudRightEl.getBoundingClientRect();
+      if (rect.height > 0) return rect.bottom + 10;
+    }
+    return 90;
+  }
+
   function drawMysticalHUD() {
     if (!mysticalBg) return;
     const now = performance.now() / 1000;
@@ -2585,7 +2597,7 @@
     ctx.fillStyle = '#c8a0ff';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
-    ctx.fillText('🌌 MYSTICAL WORLD', W - 12, 48);
+    ctx.fillText('🌌 MYSTICAL WORLD', W - 12, statusHudTop());
     ctx.restore();
   }
 
@@ -2601,7 +2613,8 @@
     ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
     const label = (unicornStage >= 2) ? '🪽 PEGASUS UNICORN' : '🦄 UNICORN MODE';
-    ctx.fillText(label, W - 12, mysticalBg ? 72 : 48);
+    const lineHeight = Math.round(clamp(W * 0.018, 12, 20)) + 6;
+    ctx.fillText(label, W - 12, statusHudTop() + (mysticalBg ? lineHeight : 0));
     ctx.restore();
   }
 

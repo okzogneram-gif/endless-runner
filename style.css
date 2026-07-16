@@ -70,6 +70,9 @@ canvas#game {
 .hud-right {
   align-items: flex-end;
   pointer-events: all;
+  /* clears the fixed THE CREST back button (top:6px, 30px tall) pinned to this corner,
+     independent of safe-area since #hud's own padding already includes it */
+  margin-top: 36px;
 }
 
 #score {
@@ -359,7 +362,7 @@ button#restart-btn:active {
 ============================================================ */
 @media (max-width: 480px) {
   #hud {
-    padding: 10px 14px;
+    padding: calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 10px calc(14px + env(safe-area-inset-left));
   }
 
   button#start-btn,
