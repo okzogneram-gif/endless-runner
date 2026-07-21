@@ -70,9 +70,6 @@ canvas#game {
 .hud-right {
   align-items: flex-end;
   pointer-events: all;
-  /* clears the fixed THE CREST back button (top:6px, 30px tall) pinned to this corner,
-     independent of safe-area since #hud's own padding already includes it */
-  margin-top: 36px;
 }
 
 #score {
@@ -675,27 +672,3 @@ button#restart-btn:active {
   }
 }
 
-/* THE CREST ポータルへ戻るボタン */
-.crest-back-btn {
-  position: fixed;
-  top: calc(6px + env(safe-area-inset-top));
-  right: calc(6px + env(safe-area-inset-right));
-  z-index: 2147483000;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(10, 10, 14, 0.72);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(251, 191, 36, 0.4);
-  color: #fbbf24;
-  text-decoration: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.15s ease, background 0.15s ease;
-}
-.crest-back-btn:hover {
-  transform: scale(1.08);
-  background: rgba(10, 10, 14, 0.9);
-}
