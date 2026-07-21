@@ -16,9 +16,19 @@
   const touchControls = document.getElementById('touch-controls');
   const btnJump = document.getElementById('btn-jump');
   const btnDuck = document.getElementById('btn-duck');
+  const reviveBtn = document.getElementById('revive-btn');
+  const revivePriceEl = document.getElementById('revive-price');
+  const reviveProcessing = document.getElementById('revive-processing');
 
   const STORAGE_KEY = 'endless-run-best';
   const MUTE_KEY = 'endless-run-muted';
+
+  // ---- 復活（疑似課金）: 実際の請求は発生しない見せかけの決済フロー ----
+  const REVIVE_BASE_PRICE = 120; // 円
+  const REVIVE_MAX_PER_RUN = 3;
+  const REVIVE_INVINCIBLE_SEC = 2.5;
+  let reviveCount = 0;
+  let invincibleTimer = 0;
 
   let audioCtx = null;
   let masterGain = null;
@@ -212,6 +222,27 @@
     if (!audioCtx) return;
     const t = audioCtx.currentTime;
     playTone(520, t, 0.5, 'sawtooth', 0.16, 90);
+  }
+
+  // 疑似課金の確定音（レジ・決済っぽい軽いクリック＋チャイム）
+  function playPurchaseSfx() {
+    ensureAudio();
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    playTone(1200, t, 0.05, 'square', 0.14);
+    playTone(880, t + 0.06, 0.12, 'triangle', 0.16);
+    playTone(1320, t + 0.14, 0.18, 'triangle', 0.18);
+  }
+
+  // 復活時のパワーアップ音
+  function playReviveSfx() {
+    ensureAudio();
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    const notes = [392, 523, 659, 784];
+    notes.forEach((f, i) => playTone(f, t + i * 0.08, 0.22, 'sine', 0.22));
+    playTone(1046, t + 0.32, 0.35, 'sine', 0.2, 1568);
+    playNoiseBurst(t, 0.3, 0.06, 2200);
   }
 
   function playGameOverJingle() {
@@ -453,6 +484,9 @@
     nextSpawnGap = randRange(1.3, 1.9);
     fallTimer = 0;
     shake = 0;
+    reviveCount = 0;
+    invincibleTimer = 0;
+    if (reviveBtn) reviveBtn.classList.add('hidden');
 
     // ★ 進化・ステージリセット
     unicornStage = 0;
@@ -698,10 +732,59 @@
     shake = 14;
     playGameOverSting();
     if (touchControls) touchControls.classList.add('hidden');
+
+    if (reviveBtn) {
+      if (reviveCount < REVIVE_MAX_PER_RUN) {
+        revivePriceEl.textContent = `¥${revivePrice()}`;
+        reviveBtn.classList.remove('hidden');
+      } else {
+        reviveBtn.classList.add('hidden');
+      }
+    }
   }
+
+  function revivePrice() { return REVIVE_BASE_PRICE * Math.pow(2, reviveCount); }
 
   function getBest() { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10); }
   function setBest(v) { localStorage.setItem(STORAGE_KEY, String(v)); }
+
+  // 疑似課金フロー: 実際の決済は行わず、処理中アニメーションのみを挟んでその場で
+  // 復活させる。連続で使うほど値上がりし、1プレイあたりの上限回数もある。
+  function attemptRevive() {
+    if (reviveCount >= REVIVE_MAX_PER_RUN) return;
+    ensureAudio();
+    gameoverScreen.classList.add('hidden');
+    reviveProcessing.classList.remove('hidden');
+    playPurchaseSfx();
+    setTimeout(doRevive, 900 + Math.random() * 400);
+  }
+
+  function doRevive() {
+    reviveCount++;
+    reviveProcessing.classList.add('hidden');
+
+    // 直前でぶつかった障害物・目の前の谷を一掃し、視界をクリアな状態から再開する
+    obstacles = [];
+    spawnTimer = 0;
+    nextSpawnGap = Math.max(nextSpawnGap, 1.4);
+
+    player.y = groundY;
+    player.vy = 0;
+    player.grounded = true;
+    player.ducking = false;
+    player.fallRotation = 0;
+    if ('jumpsRemaining' in player) player.jumpsRemaining = 2;
+    fallTimer = 0;
+    shake = 0;
+
+    invincibleTimer = REVIVE_INVINCIBLE_SEC;
+    state = State.PLAYING;
+    stopGameOverMusic();
+    if (!muted) bgmPlayer.start();
+    playReviveSfx();
+  }
+
+  if (reviveBtn) reviveBtn.addEventListener('click', attemptRevive);
 
   // ★ ユニコーン進化演出
   function showUnicornEvolution() {
@@ -799,7 +882,7 @@
     if (player.y >= groundY) {
       const pit = pitUnderPlayer();
       // pitは「翼ユニコーンでも落下」（破壊対象外）という選択済み仕様
-      if (pit && boostRemaining <= 0 && fireRemaining <= 0) { startFalling(); return; }
+      if (pit && boostRemaining <= 0 && fireRemaining <= 0 && invincibleTimer <= 0) { startFalling(); return; }
       player.y = groundY;
       player.vy = 0;
       if (!player.grounded) {
@@ -875,7 +958,7 @@
       starFlash = Math.max(starFlash, 0.22);
     }
 
-    if (boostRemaining > 0) {
+    if (boostRemaining > 0 || invincibleTimer > 0) {
       /* skip collision */
     } else {
       for (const o of obstacles) {
@@ -994,6 +1077,7 @@
     }
 
     if (shake > 0) shake = Math.max(0, shake - dt * 40);
+    if (invincibleTimer > 0) invincibleTimer = Math.max(0, invincibleTimer - dt);
   }
 
   function updateFalling(dt) {
@@ -1389,6 +1473,10 @@
     ctx.translate(x + w / 2, player.y + horseLift);
 
     if (falling) { ctx.globalAlpha = fallAlpha; ctx.rotate(player.fallRotation); }
+    else if (invincibleTimer > 0) {
+      // 復活直後の無敵時間は点滅させて見た目でも分かるようにする
+      ctx.globalAlpha = (Math.floor(performance.now() / 80) % 2 === 0) ? 1 : 0.35;
+    }
     ctx.scale(scale, scale);
 
     // ★ ユニコーンオーラ描画（プレイヤーの後ろに配置）
